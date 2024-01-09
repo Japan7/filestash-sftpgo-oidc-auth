@@ -175,9 +175,9 @@ async function createFilestashSession(username: string) {
   const payload = {
     type: "sftp",
     hostname: SFTPGO_SFTP_HOST,
-    username,
     port: SFTPGO_SFTP_PORT,
-    host_key: PRIVKEY,
+    username,
+    password: PRIVKEY,
   };
   const resp = await fetch(`${FILESTASH_URL}/api/session?${params}`, {
     method: "POST",
