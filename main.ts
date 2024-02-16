@@ -143,7 +143,7 @@ async function createUser(
 
 // deno-lint-ignore no-explicit-any
 async function updateUser(apiToken: string, user: any, groups: SFTPGoGroup[]) {
-  const public_keys = user.public_keys;
+  const public_keys = user.public_keys ?? [];
   if (!public_keys.includes(PUBKEY)) {
     public_keys.push(PUBKEY);
   }
