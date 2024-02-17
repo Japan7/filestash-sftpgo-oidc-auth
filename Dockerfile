@@ -1,4 +1,4 @@
-FROM lukechannings/deno:latest
+FROM denoland/deno:latest
 
 WORKDIR /app
 
