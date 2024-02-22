@@ -1,4 +1,4 @@
-FROM denoland/deno:latest@sha256:d8eba2c54f66527345662c2fad580defa9b3467244798f37a2192405b433f94c
+FROM denoland/deno:latest@sha256:73978274197aee18baaa38eb230e30de48deb2b925e12ddfb1ddd6959e63cf98
 
 WORKDIR /app
 
