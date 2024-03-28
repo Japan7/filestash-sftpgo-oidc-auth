@@ -1,7 +1,7 @@
 import "https://deno.land/std@0.220.1/dotenv/load.ts";
 import { decode } from "https://deno.land/x/djwt@v3.0.1/mod.ts";
-import { logger } from "https://deno.land/x/hono@v4.1.4/middleware.ts";
-import { Hono } from "https://deno.land/x/hono@v4.1.4/mod.ts";
+import { logger } from "https://deno.land/x/hono@v4.1.5/middleware.ts";
+import { Hono } from "https://deno.land/x/hono@v4.1.5/mod.ts";
 
 const FILESTASH_URL = Deno.env.get("FILESTASH_URL")!;
 const FILESTASH_API_KEY = Deno.env.get("FILESTASH_API_KEY")!;
