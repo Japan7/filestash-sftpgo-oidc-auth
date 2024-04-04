@@ -53,7 +53,7 @@ app.get(`${API_PREFIX}/callback`, async (c) => {
   };
 
   const groups = oidc_groups.map((g: string) => ({
-    name: g.slice(1).replace("discord-", ""),
+    name: g.replace("discord-", ""),
     type: 2,
   }));
 
