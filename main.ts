@@ -37,7 +37,7 @@ app.get(`${API_PREFIX}/login`, async (c) => {
   params.append("client_id", OIDC_CLIENT_ID);
   params.append("redirect_uri", FILESTASH_REDIRECT_URI);
   params.append("response_type", "code");
-  params.append("scope", "openid");
+  params.append("scope", "openid profile");
   const config = await getOIDCConfig();
   return c.redirect(`${config.authorization_endpoint}?${params}`);
 });
