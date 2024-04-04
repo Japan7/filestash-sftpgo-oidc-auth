@@ -8,7 +8,7 @@ const FILESTASH_API_KEY = Deno.env.get("FILESTASH_API_KEY")!;
 const API_PREFIX = Deno.env.get("API_PREFIX")!;
 
 const OIDC_CONFIG_URL = Deno.env.get("OIDC_CONFIG_URL")!;
-const OIDC_CLIENT_ID = Deno.env.get("OIDC_CONFIG_URL")!;
+const OIDC_CLIENT_ID = Deno.env.get("OIDC_CLIENT_ID")!;
 const OIDC_CLIENT_SECRET = Deno.env.get("OIDC_CLIENT_SECRET")!;
 
 const SFTPGO_WEB_URL = Deno.env.get("SFTPGO_WEB_URL")!;
