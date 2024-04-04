@@ -7,15 +7,12 @@ const FILESTASH_URL = Deno.env.get("FILESTASH_URL")!;
 const FILESTASH_API_KEY = Deno.env.get("FILESTASH_API_KEY")!;
 const API_PREFIX = Deno.env.get("API_PREFIX")!;
 
-const KEYCLOAK_URL = Deno.env.get("KEYCLOAK_URL")!;
-const KEYCLOAK_REALM = Deno.env.get("KEYCLOAK_REALM")!;
+const OIDC_CONFIG_URL = Deno.env.get("OIDC_CONFIG_URL")!;
+const OIDC_CLIENT_ID = Deno.env.get("OIDC_CONFIG_URL")!;
+const OIDC_CLIENT_SECRET = Deno.env.get("OIDC_CLIENT_SECRET")!;
 
 const SFTPGO_WEB_URL = Deno.env.get("SFTPGO_WEB_URL")!;
 const SFTPGO_ADMIN_BASICAUTH = Deno.env.get("SFTPGO_ADMIN_BASICAUTH")!;
-const SFTPGO_KEYCLOAK_CLIENT_ID = Deno.env.get("SFTPGO_KEYCLOAK_CLIENT_ID")!;
-const SFTPGO_KEYCLOAK_CLIENT_SECRET = Deno.env.get(
-  "SFTPGO_KEYCLOAK_CLIENT_SECRET"
-)!;
 
 const SFTPGO_SFTP_HOST = Deno.env.get("SFTPGO_SFTP_HOST")!;
 const SFTPGO_SFTP_PORT = Deno.env.get("SFTPGO_SFTP_PORT")!;
@@ -25,7 +22,6 @@ const PRIVKEY_FILE = Deno.env.get("PRIVKEY_FILE")!;
 const PUBKEY = await Deno.readTextFile(PUBKEY_FILE);
 const PRIVKEY = await Deno.readTextFile(PRIVKEY_FILE);
 
-const BASE_OIDC_URL = `${KEYCLOAK_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect`;
 const FILESTASH_REDIRECT_URI = `${FILESTASH_URL}${API_PREFIX}/callback`;
 
 const app = new Hono();
@@ -36,13 +32,14 @@ app.get("/login", (c) => {
   return c.redirect(`${API_PREFIX}/login`, 301);
 });
 
-app.get(`${API_PREFIX}/login`, (c) => {
+app.get(`${API_PREFIX}/login`, async (c) => {
   const params = new URLSearchParams();
-  params.append("client_id", SFTPGO_KEYCLOAK_CLIENT_ID);
+  params.append("client_id", OIDC_CLIENT_ID);
   params.append("redirect_uri", FILESTASH_REDIRECT_URI);
   params.append("response_type", "code");
   params.append("scope", "openid");
-  return c.redirect(`${BASE_OIDC_URL}/auth?${params}`);
+  const config = await getOIDCConfig();
+  return c.redirect(`${config.authorization_endpoint}?${params}`);
 });
 
 app.get(`${API_PREFIX}/callback`, async (c) => {
@@ -50,10 +47,12 @@ app.get(`${API_PREFIX}/callback`, async (c) => {
 
   const [_header, _payload, _signature] = decode(accessToken);
   console.debug(_payload);
-  const { preferred_username: username, groups: keycloak_groups } =
-    _payload as { preferred_username: string; groups: string[] };
+  const { preferred_username: username, groups: oidc_groups } = _payload as {
+    preferred_username: string;
+    groups: string[];
+  };
 
-  const groups = keycloak_groups.map((g: string) => ({
+  const groups = oidc_groups.map((g: string) => ({
     name: g.slice(1).replace("discord-", ""),
     type: 2,
   }));
@@ -73,14 +72,24 @@ app.get(`${API_PREFIX}/callback`, async (c) => {
   return c.redirect("/");
 });
 
+let oidcConfig: { authorization_endpoint: string; token_endpoint: string };
+async function getOIDCConfig() {
+  if (!oidcConfig) {
+    const resp = await fetch(OIDC_CONFIG_URL);
+    oidcConfig = await resp.json();
+  }
+  return oidcConfig;
+}
+
 async function getOIDCAccessToken(code: string) {
   const form = new URLSearchParams();
-  form.append("client_id", SFTPGO_KEYCLOAK_CLIENT_ID);
-  form.append("client_secret", SFTPGO_KEYCLOAK_CLIENT_SECRET);
+  form.append("client_id", OIDC_CLIENT_ID);
+  form.append("client_secret", OIDC_CLIENT_SECRET);
   form.append("grant_type", "authorization_code");
   form.append("code", code);
   form.append("redirect_uri", FILESTASH_REDIRECT_URI);
-  const resp = await fetch(`${BASE_OIDC_URL}/token`, {
+  const config = await getOIDCConfig();
+  const resp = await fetch(config.token_endpoint, {
     method: "POST",
     body: form,
   });
