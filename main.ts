@@ -1,5 +1,4 @@
 import "https://deno.land/std@0.221.0/dotenv/load.ts";
-import { decode } from "https://deno.land/x/djwt@v3.0.2/mod.ts";
 import { logger } from "https://deno.land/x/hono@v4.2.3/middleware.ts";
 import { Hono } from "https://deno.land/x/hono@v4.2.3/mod.ts";
 
@@ -44,10 +43,11 @@ app.get(`${API_PREFIX}/login`, async (c) => {
 
 app.get(`${API_PREFIX}/callback`, async (c) => {
   const accessToken = await getOIDCAccessToken(c.req.query("code")!);
+  console.debug(accessToken);
+  const data = await getUserinfo(accessToken);
+  console.debug(data);
 
-  const [_header, _payload, _signature] = decode(accessToken);
-  console.debug(_payload);
-  const { preferred_username: username, groups: oidc_groups } = _payload as {
+  const { preferred_username: username, groups: oidc_groups } = data as {
     preferred_username: string;
     groups: string[];
   };
@@ -72,7 +72,11 @@ app.get(`${API_PREFIX}/callback`, async (c) => {
   return c.redirect("/");
 });
 
-let oidcConfig: { authorization_endpoint: string; token_endpoint: string };
+let oidcConfig: {
+  authorization_endpoint: string;
+  token_endpoint: string;
+  userinfo_endpoint: string;
+};
 async function getOIDCConfig() {
   if (!oidcConfig) {
     const resp = await fetch(OIDC_CONFIG_URL);
@@ -94,7 +98,16 @@ async function getOIDCAccessToken(code: string) {
     body: form,
   });
   const json = await resp.json();
+
   return json.access_token as string;
+}
+
+async function getUserinfo(accessToken: string) {
+  const config = await getOIDCConfig();
+  const resp = await fetch(config.userinfo_endpoint, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  return await resp.json();
 }
 
 async function createToken() {
