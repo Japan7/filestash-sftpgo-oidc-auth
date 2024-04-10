@@ -32,13 +32,13 @@ app.get("/login", (c) => {
 });
 
 app.get(`${API_PREFIX}/login`, async (c) => {
-  const params = new URLSearchParams();
-  params.append("client_id", OIDC_CLIENT_ID);
-  params.append("redirect_uri", FILESTASH_REDIRECT_URI);
-  params.append("response_type", "code");
-  params.append("scope", "openid profile groups");
   const config = await getOIDCConfig();
-  return c.redirect(`${config.authorization_endpoint}?${params}`);
+  const authUrl = new URL(config.authorization_endpoint);
+  authUrl.searchParams.set("client_id", OIDC_CLIENT_ID);
+  authUrl.searchParams.set("redirect_uri", FILESTASH_REDIRECT_URI);
+  authUrl.searchParams.set("response_type", "code");
+  authUrl.searchParams.set("scope", "openid profile groups");
+  return c.redirect(authUrl.toString());
 });
 
 app.get(`${API_PREFIX}/callback`, async (c) => {
@@ -192,8 +192,8 @@ async function updateUser(apiToken: string, user: any, groups: SFTPGoGroup[]) {
 }
 
 async function createFilestashSession(username: string) {
-  const params = new URLSearchParams();
-  params.append("key", FILESTASH_API_KEY);
+  const sessionUrl = new URL("/api/session", FILESTASH_URL);
+  sessionUrl.searchParams.set("key", FILESTASH_API_KEY);
   const payload = {
     type: "sftp",
     hostname: SFTPGO_SFTP_HOST,
@@ -201,7 +201,7 @@ async function createFilestashSession(username: string) {
     username,
     password: PRIVKEY,
   };
-  const resp = await fetch(`${FILESTASH_URL}/api/session?${params}`, {
+  const resp = await fetch(sessionUrl, {
     method: "POST",
     body: JSON.stringify(payload),
   });
