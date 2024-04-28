@@ -1,4 +1,4 @@
-import "https://deno.land/std@0.223.0/dotenv/load.ts";
+import "https://deno.land/std@0.224.0/dotenv/load.ts";
 import { logger } from "https://deno.land/x/hono@v4.2.8/middleware.ts";
 import { Hono } from "https://deno.land/x/hono@v4.2.8/mod.ts";
 
